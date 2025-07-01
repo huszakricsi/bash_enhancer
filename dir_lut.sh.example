@@ -1,0 +1,12 @@
+# Directory lookup table for lg and related functions
+# This file is sourced by .bash_enhancer
+
+declare -A __DIR_LUT=(
+  [home]="$HOME"
+  [projects]="$HOME/projects"
+  [main-project]="$HOME/projects/main-project"
+  [dependency]="$HOME/projects/dependency-project"
+  [frontend-project]="$HOME/projects/frontend-project"
+  [some-client-project]="$HOME/otherclient/client-project"
+  # Add more mappings as needed
+)
