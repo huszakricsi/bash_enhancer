@@ -20,4 +20,5 @@ else
     echo "To activate Bash Enhancer in your current shell, run:"
     echo "  source \"$BASHRC\""
     echo "Or open a new terminal window."
+    echo -e "\nUse 'h' command to see the list of aliases and functions."
 fi
