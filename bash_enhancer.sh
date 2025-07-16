@@ -5,7 +5,7 @@ if [ -f "$HOME/.bash_enhancer/helpers.sh" ]; then
   source "$HOME/.bash_enhancer/helpers.sh"
 fi
 
-#h() { # Outputs list of aliases and functions in a colorized Markdown table
+#h() { # Outputs list of aliases and functions in a colorized Markdown table. Filter groups by adding it's prefix after the command(h sys - for example). If -g is passed, it outputs a list of groups and their aliases/functions.
 
 #hl() { # List all aliases and functions in your .bash_enhancer/bash_enhancer.sh with their definitions
 
@@ -25,13 +25,6 @@ alias ar="sudo apt-get remove" # Remove a package using apt-get
 alias as="sudo apt-get search" # Search for a package using apt-get
 alias aug="sudo apt-get upgrade" # Upgrade installed packages using apt-get
 alias armo="sudo apt-get autoremove" # Remove unused packages using apt-get
-
-# =========================
-# LS Aliases
-# =========================
-alias ll='ls -alF' # List files in long format, including hidden files
-alias la='ls -A' # List all files, including hidden files, but not '.' and '..'
-alias l='ls -CF' # List files in columns, appending a slash to directories
 
 # =========================
 # Git Aliases
@@ -164,7 +157,7 @@ lg() { # (Let's Go) Change to the specified directory from LUT, with auto-comple
   fi
 }
 
-# Auto-completion for lg command, rs, rc, nrd, nrd-dependency-refresh, and rk commands. Add more commands as needed for auto-completion.
+ # Auto-completion for lg command, rs, rc, nrd, nrd-dependency-refresh, and rk commands. Add more commands as needed for auto-completion. (whitespace before # is to keep it from being listed by h -g command)
 _lg_completions() {
   local cur_word
   cur_word="${COMP_WORDS[COMP_CWORD]}"
@@ -173,6 +166,13 @@ _lg_completions() {
   COMPREPLY=( $(compgen -W "$keys" -- "$cur_word") )
 }
 complete -o bashdefault -o default -F _lg_completions lg rs rc nrd nrd-dependency-refresh rk
+
+# =========================
+# LS Functions
+# =========================
+alias ll="ls -alF" # List files in long format, including hidden files
+alias la="ls -A" # List all files, including hidden files, but not '.' and '..'
+alias l="ls -CF" # List files in columns, appending a slash to directories
 
 # =========================
 # Project Functions

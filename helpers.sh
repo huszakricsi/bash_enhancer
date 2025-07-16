@@ -4,19 +4,35 @@
 
 h() { # Outputs list of aliases and functions in a colorized Markdown table
   local cols=$(tput cols)
-  awk -v termw="$cols" '
+  local group_prefix="$1"
+  awk -v termw="$cols" -v prefix="$group_prefix" '
     function wrap(str, width,   out, i) {
       while (length(str) > width) {
-        for (i=width; i>0 && substr(str,i,1)!=" "; i--); 
+        for (i=width; i>0 && substr(str,i,1)!=" "; i--);
         if (i==0) i=width;
         out = out substr(str,1,i) "\n"; str=substr(str,i+1);
       }
       return out str;
     }
-    # First pass: collect max widths
+    function lcs(a, b,   m, n, i, j, dp) { # Longest Common Subsequence length (for fuzzy match)
+      m=length(a); n=length(b);
+      split("",dp);
+      for(i=0;i<=m;i++) for(j=0;j<=n;j++) dp[i "," j]=0;
+      for(i=1;i<=m;i++) for(j=1;j<=n;j++)
+        if(substr(a,i,1)==substr(b,j,1)) dp[i "," j]=dp[(i-1) "," (j-1)]+1;
+        else dp[i "," j]=(dp[(i-1) "," j]>dp[i "," (j-1)]?dp[(i-1) "," j]:dp[i "," (j-1)]);
+      return dp[m "," n];
+    }
+    BEGIN {
+      group_count=0;
+    }
+    # First pass: collect max widths and all group names
     NR==FNR {
       if (/^# ([^=].*)/) {
         group = $2; for (i=3; i<=NF; i++) group = group " " $i;
+        if (!(group in groupnames)) {
+          groupnames[group]=1; group_list[++group_count]=group;
+        }
       }
       if (/^alias /) {
         match($0, /^alias ([^=]+)="([^"]*)" # (.*)$/, arr);
@@ -37,6 +53,30 @@ h() { # Outputs list of aliases and functions in a colorized Markdown table
         }
       }
       next;
+    }
+    # Autocorrect group prefix if needed (only on second file, first line)
+    FNR==1 && NR!=FNR {
+      if (prefix!="") {
+        found=0;
+        for(i=1;i<=group_count;i++) {
+          if (tolower(group_list[i]) ~ "^" tolower(prefix)) { found=1; break; }
+        }
+        if (!found) {
+          # Fuzzy match: find group with max LCS
+          best_i=0; best_score=0;
+          for(i=1;i<=group_count;i++) {
+            score=lcs(tolower(prefix),tolower(group_list[i]));
+            if (score>best_score) { best_score=score; best_i=i; }
+          }
+          if (best_score>0) {
+            printf "\033[93m[autocorrect] No group starts with '%s'. Using closest match: '%s'\033[0m\n", prefix, group_list[best_i] > "/dev/stderr";
+            prefix=group_list[best_i];
+          } else {
+            printf "\033[91m[error] No group matches or resembles '%s'\033[0m\n", prefix > "/dev/stderr";
+            exit 1;
+          }
+        }
+      }
     }
     # Second pass: print table
     NR!=FNR {
@@ -60,37 +100,38 @@ h() { # Outputs list of aliases and functions in a colorized Markdown table
         group = $2; for (i=3; i<=NF; i++) group = group " " $i;
         next;
       }
-      if (/^alias /) {
-        match($0, /^alias ([^=]+)="([^"]*)" # (.*)$/, arr);
-        if (arr[1] && arr[2] && arr[3]) {
-          cmd=wrap(arr[2],cmdw); desc=wrap(arr[3],descw);
-          
-          n=split(cmd,cmdarr,"\n"); m=split(desc,descarr,"\n");
-          lines=(n>m?n:m);
-          for(i=1;i<=lines;i++) {
-            printf "%s| %-*s | %-*s | %-*s | %-*s |\033[0m\n", bg[row%2], maxg, (i==1?group:""), maxn, (i==1?arr[1]:""), cmdw, (i<=n?cmdarr[i]:""), descw, (i<=m?descarr[i]:"");
+      if (prefix == "" || tolower(group) ~ "^" tolower(prefix)) {
+        if (/^alias /) {
+          match($0, /^alias ([^=]+)="([^"]*)" # (.*)$/, arr);
+          if (arr[1] && arr[2] && arr[3]) {
+            cmd=wrap(arr[2],cmdw); desc=wrap(arr[3],descw);
+            n=split(cmd,cmdarr,"\n"); m=split(desc,descarr,"\n");
+            lines=(n>m?n:m);
+            for(i=1;i<=lines;i++) {
+              printf "%s| %-*s | %-*s | %-*s | %-*s |\033[0m\n", bg[row%2], maxg, (i==1?group:""), maxn, (i==1?arr[1]:""), cmdw, (i<=n?cmdarr[i]:""), descw, (i<=m?descarr[i]:"");
+            }
+            row++;
           }
-          row++;
+          next;
         }
-        next;
-      }
-      if (/^#?[a-zA-Z0-9_\-]+\(\) { #/) {
-        match($0, /^#?([a-zA-Z0-9_\-]+)\(\) { # (.*)$/, arr);
-        if (arr[1] && arr[2]) {
-          fun=arr[1]; desc=wrap(arr[2],descw);
-          if (fun == "h" || fun == "hl") {
-            def=wrap("Help function defined in ~/.bash_enhancer/helpers.sh",cmdw);
-          } else {
-            def=wrap("Function (Use hl command to see definiton, or check ~/.bash_enhancer/bash_enhancer.sh)",cmdw);
+        if (/^#?[a-zA-Z0-9_\-]+\(\) { #/) {
+          match($0, /^#?([a-zA-Z0-9_\-]+)\(\) { # (.*)$/, arr);
+          if (arr[1] && arr[2]) {
+            fun=arr[1]; desc=wrap(arr[2],descw);
+            if (fun == "h" || fun == "hl") {
+              def=wrap("Help function defined in ~/.bash_enhancer/helpers.sh",cmdw);
+            } else {
+              def=wrap("Function (Use hl command to see definiton, or check ~/.bash_enhancer/bash_enhancer.sh)",cmdw);
+            }
+            n=split(def,cmdarr,"\n"); m=split(desc,descarr,"\n");
+            lines=(n>m?n:m);
+            for(i=1;i<=lines;i++) {
+              printf "%s| %-*s | %-*s | %-*s | %-*s |\033[0m\n", bg[row%2], maxg, (i==1?group:""), maxn, (i==1?fun:""), cmdw, (i<=n?cmdarr[i]:""), descw, (i<=m?descarr[i]:"");
+            }
+            row++;
           }
-          n=split(def,cmdarr,"\n"); m=split(desc,descarr,"\n");
-          lines=(n>m?n:m);
-          for(i=1;i<=lines;i++) {
-            printf "%s| %-*s | %-*s | %-*s | %-*s |\033[0m\n", bg[row%2], maxg, (i==1?group:""), maxn, (i==1?fun:""), cmdw, (i<=n?cmdarr[i]:""), descw, (i<=m?descarr[i]:"");
-          }
-          row++;
+          next;
         }
-        next;
       }
     }
   ' ~/.bash_enhancer/bash_enhancer.sh ~/.bash_enhancer/bash_enhancer.sh
