@@ -36,7 +36,10 @@ alias l='ls -CF' # List files in columns, appending a slash to directories
 # =========================
 # Git Aliases
 # =========================
-alias ga="git add" # Git add command to stage changes
+ga() { # Git add command to stage changes
+  git add "$@"
+}
+
 alias gs="git status" # Show the status of the Git repository
 alias gl="git for-each-ref --sort=committerdate refs/heads/ --format='%(HEAD) %(color:yellow)%(refname:short)%(color:reset) - %(color:red)%(objectname:short)%(color:reset) - %(contents:subject) - %(authorname) (%(color:green)%(committerdate:relative)%(color:reset))'" # Colorized, sorted list of local Git branches
 alias gpl="git pull" # Pull the latest changes from the remote repository
@@ -44,14 +47,53 @@ alias gps="git push" # Push changes to the remote repository
 alias gf="git fetch" # Fetch changes from the remote repository
 alias gcan="git commit --amend --no-edit" # Amend the last commit without changing the commit message
 alias gcl="git clone $1" # Clone a Git repository
-alias gco="git checkout $1" # Checkout a specific branch or commit
-alias gcb="git checkout -b $1" # Create a new branch and switch to it
+
+gco() { # Checkout a specific branch or commit
+  git checkout "$@"
+}
+
+alias gcob="git checkout -b $1" # Create a new branch and switch to it
+
+gcoh() { # Show Git checkout history
+  git reflog --date=iso | grep 'checkout: moving from' | \
+  awk -F'HEAD@{|}: checkout: moving from | to ' '
+    {
+      date[NR]=$2; src[NR]=$3; dst[NR]=$4
+      if(length($2)>max1) max1=length($2)
+      if(length($3)>max2) max2=length($3)
+      if(length($4)>max3) max3=length($4)
+      n=NR
+    }
+    END {
+      header1="Date"
+      header2="Source"
+      header3="Target"
+      if(length(header1)>max1) max1=length(header1)
+      if(length(header2)>max2) max2=length(header2)
+      if(length(header3)>max3) max3=length(header3)
+      print "\033[1mGit branch checkout history\033[0m"
+      printf "\033[1m%-*s | %-*s -> %-*s\033[0m\n", max1, header1, max2, header2, max3, header3
+      for(i=1;i<=n;i++)
+        printf "%-*s | \033[38;5;208m%-*s\033[0m -> \033[38;5;226m%-*s\033[0m\n", max1, date[i], max2, src[i], max3, dst[i]
+    }
+  ' | head -21
+}
+
 alias gcm="git commit -m $1" # Commit changes with a message
 alias gst="git stash" # Stash changes in the working directory
 alias gstp="git stash pop" # Apply the most recent stash
-alias grh="git reset --hard" # Discard all changes in the working directory
 alias gcfd="git clean -fd" # Discard untracked files
+alias grh="git reset --hard" # Discard all changes in the working directory
 alias grhh="git reset --hard HEAD && git clean -fd" # Discard all changes, including untracked files and directories
+
+if [ -f /usr/share/bash-completion/completions/git ]; then
+  source /usr/share/bash-completion/completions/git
+fi
+
+if type __git_complete &>/dev/null; then # Enable default git completions for shortcuts
+  __git_complete ga _git_add
+  __git_complete gco _git_checkout
+fi
 
 # =========================
 # Docker Aliases
