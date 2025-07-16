@@ -49,6 +49,9 @@ alias gcb="git checkout -b $1" # Create a new branch and switch to it
 alias gcm="git commit -m $1" # Commit changes with a message
 alias gst="git stash" # Stash changes in the working directory
 alias gstp="git stash pop" # Apply the most recent stash
+alias grh="git reset --hard" # Discard all changes in the working directory
+alias gcfd="git clean -fd" # Discard untracked files
+alias grhh="git reset --hard HEAD && git clean -fd" # Discard all changes, including untracked files and directories
 
 # =========================
 # Docker Aliases
