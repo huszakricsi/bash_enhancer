@@ -4,8 +4,22 @@
 
 h() { # Outputs list of aliases and functions in a colorized Markdown table
   local cols=$(tput cols)
-  local group_prefix="$1"
-  awk -v termw="$cols" -v prefix="$group_prefix" '
+  local group_prefix=""
+  local list_groups=0
+  # Parse arguments: -g for group list, otherwise first non-switch is prefix
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      -g|--groups)
+        list_groups=1
+        shift
+        ;;
+      *)
+        group_prefix="$1"
+        shift
+        ;;
+    esac
+  done
+  awk -v termw="$cols" -v prefix="$group_prefix" -v list_groups="$list_groups" '
     function wrap(str, width,   out, i) {
       while (length(str) > width) {
         for (i=width; i>0 && substr(str,i,1)!=" "; i--);
@@ -53,6 +67,12 @@ h() { # Outputs list of aliases and functions in a colorized Markdown table
         }
       }
       next;
+    }
+    # If -g, just print group list and exit
+    FNR==1 && NR!=FNR && list_groups==1 {
+      print "\033[1;36mAvailable groups:\033[0m" > "/dev/stderr";
+      for(i=1;i<=group_count;i++) print "  " group_list[i] > "/dev/stderr";
+      exit 0;
     }
     # Autocorrect group prefix if needed (only on second file, first line)
     FNR==1 && NR!=FNR {
