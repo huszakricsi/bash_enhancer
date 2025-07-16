@@ -33,6 +33,7 @@ ga() { # Git add command to stage changes
   git add "$@"
 }
 
+alias gd="git diff" # Show the differences between the working directory and the index
 alias gs="git status" # Show the status of the Git repository
 alias gl="git for-each-ref --sort=committerdate refs/heads/ --format='%(HEAD) %(color:yellow)%(refname:short)%(color:reset) - %(color:red)%(objectname:short)%(color:reset) - %(contents:subject) - %(authorname) (%(color:green)%(committerdate:relative)%(color:reset))'" # Colorized, sorted list of local Git branches
 alias gpl="git pull" # Pull the latest changes from the remote repository
@@ -86,6 +87,7 @@ fi
 if type __git_complete &>/dev/null; then # Enable default git completions for shortcuts
   __git_complete ga _git_add
   __git_complete gco _git_checkout
+  __git_complete gd _git_diff
 fi
 
 # =========================
