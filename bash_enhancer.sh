@@ -115,8 +115,9 @@ alias kdrs="kubectl describe rs" # Describe a Kubernetes replication controller
 # =========================
 # Node.js/NPM Aliases
 # =========================
-alias nrb="npm run build" # Run the Node.js build script
 alias ni="npm install" # Install Node.js dependencies
+alias nrb="npm run build" # Run the Node.js build script
+alias nrt="npm run test $1" # Run the Node.js test script
 
 # =========================
 # Ruby/Rails Aliases
