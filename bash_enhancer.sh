@@ -38,6 +38,7 @@ alias gs="git status" # Show the status of the Git repository
 alias gl="git for-each-ref --sort=committerdate refs/heads/ --format='%(HEAD) %(color:yellow)%(refname:short)%(color:reset) - %(color:red)%(objectname:short)%(color:reset) - %(contents:subject) - %(authorname) (%(color:green)%(committerdate:relative)%(color:reset))'" # Colorized, sorted list of local Git branches
 alias gpl="git pull" # Pull the latest changes from the remote repository
 alias gps="git push" # Push changes to the remote repository
+alias gpsf="git push -f" # Force push changes to the remote repository
 alias gf="git fetch" # Fetch changes from the remote repository
 alias gcan="git commit --amend --no-edit" # Amend the last commit without changing the commit message
 alias gcl="git clone $1" # Clone a Git repository
