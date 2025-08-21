@@ -50,6 +50,14 @@ gm() { # Git merge command
   git merge "$@"
 }
 
+grb() { # Git rebase command
+  git rebase "$@"
+}
+
+gbd() { # Git branch delete command
+  git branch -d "$@"
+}
+
 alias gcob="git checkout -b $1" # Create a new branch and switch to it
 
 gcoh() { # Show Git checkout history
@@ -93,6 +101,8 @@ if type __git_complete &>/dev/null; then # Enable default git completions for sh
   __git_complete gco _git_checkout
   __git_complete gd _git_diff
   __git_complete gm _git_merge
+  __git_complete grb _git_rebase
+  __git_complete gbd _git_branch
 fi
 
 # =========================
