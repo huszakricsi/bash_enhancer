@@ -4,6 +4,8 @@
 declare -A __DIR_LUT=(
   [home]="$HOME"
   [projects]="$HOME/projects"
+  [bash-enhancer]="$HOME/.bash_enhancer"
+  [ssh]="$HOME/.ssh"
   [main-project]="$HOME/projects/main-project"
   [dependency]="$HOME/projects/dependency-project"
   [frontend-project]="$HOME/projects/frontend-project"
